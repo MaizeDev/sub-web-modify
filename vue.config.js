@@ -1,5 +1,4 @@
 const path = require('path')
-const webpack = require('webpack')
 
 function resolve(dir) {
   return path.join(__dirname, dir)
@@ -31,14 +30,5 @@ module.exports = {
         symbolId: 'icon-[name]'
       })
       .end()
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      buffer: require.resolve('buffer/')
-    }
-    config.plugin('provide').use(webpack.ProvidePlugin, [
-      {
-        Buffer: ['buffer', 'Buffer']
-      }
-    ])
   }
 };

@@ -251,14 +251,7 @@
                     @click="dialogLoadConfigVisible = true"
                     icon="el-icon-copy-document"
                     :loading="loading3"
-                >解析订阅
-                </el-button>
-                <el-button
-                    style="width: 120px"
-                    type="success"
-                    @click="localHy2ToSurge"
-                    icon="el-icon-magic-stick"
-                >Hy2转Surge
+                >从URL解析
                 </el-button>
               </el-form-item>
               <el-form-item label-width="0px" style="text-align: center">
@@ -458,8 +451,7 @@ export default {
         clientTypes: {
           Clash: "clash",
           ShadowRocket: "shadowrocket",
-          "Surge 5": "surge&ver=5",
-          "Surge 4": "surge&ver=4",
+          "Surge4/5": "surge&ver=4",
           "Sing-Box": "singbox",
           V2Ray: "v2ray",
           Trojan: "trojan",
@@ -1059,41 +1051,6 @@ export default {
             window.open(advancedVideo);
           });
     },
-    localHy2ToSurge() {
-      if (this.form.sourceSubUrl === "") {
-        this.$message.error("订阅链接不能为空");
-        return false;
-      }
-      let urls = this.form.sourceSubUrl.split(/(\n|\r|\n\r|\|)/);
-      let surgeNodes = [];
-      urls.forEach(url => {
-        url = url.trim();
-        if (url.startsWith("hysteria2://") || url.startsWith("hy2://")) {
-          try {
-            let parsed = new URL(url);
-            let name = decodeURIComponent(parsed.hash.substring(1)) || parsed.hostname;
-            let password = parsed.username || parsed.password;
-            let server = parsed.hostname;
-            let port = parsed.port || 443;
-            let sni = parsed.searchParams.get("sni") || server;
-            let skipCertVerify = parsed.searchParams.get("insecure") === "1" ? "true" : "false";
-            
-            let node = `${name} = hysteria2, ${server}, ${port}, password=${password}, sni=${sni}, skip-cert-verify=${skipCertVerify}`;
-            surgeNodes.push(node);
-          } catch (e) {
-            console.error("Failed to parse Hy2 URL:", url, e);
-          }
-        }
-      });
-      
-      if (surgeNodes.length > 0) {
-        this.customSubUrl = surgeNodes.join("\n");
-        this.$copyText(this.customSubUrl);
-        this.$message.success("已在本地将 Hysteria2 节点转换为 Surge 格式并复制到剪贴板");
-      } else {
-        this.$message.warning("未在输入中找到有效的 Hysteria2 链接");
-      }
-    },
     makeUrl() {
       if (this.form.sourceSubUrl === "" || this.form.clientType === "") {
         this.$message.error("订阅链接与客户端为必填项");
@@ -1173,9 +1130,6 @@ export default {
       if (this.form.clientType.includes("surge")) {
         if (this.form.tpl.surge.doh === true) {
           this.customSubUrl += "&surge.doh=true";
-        }
-        if (this.form.sourceSubUrl.includes("hysteria2://") || this.form.sourceSubUrl.includes("hy2://")) {
-          this.$message.warning("检测到 Hysteria2 链接，请确保后端支持或使用 'Hy2转Surge' 按钮进行本地转换");
         }
       }
       if (this.form.clientType === "clash") {
@@ -1453,7 +1407,7 @@ export default {
             this.backendVersion = this.backendVersion.replace("subconverter", "SubConverter");
             let a = this.form.customBackend.indexOf("api.v1.mk") !== -1 || this.form.customBackend.indexOf("url.v1.mk") !== -1;
             let b = this.form.customBackend.indexOf("127.0.0.1") !== -1;
-            a ? this.$message.success(`${this.backendVersion}` + "肥羊负载均衡增强版后端，已屏蔽免费节点池（会返回403），额外支持Vless Reality+AnyTLS+TUIC+Hysteria2+Mieru订阅转换") : b ? this.$message.success(`${this.backendVersion}` + "本地局域网自建版后端") : this.$message.success(`${this.backendVersion}` + "官方原版后端不支持vless/hysteria订阅转换");
+            a ? this.$message.success(`${this.backendVersion}` + "肥羊负载均衡增强版后端，已屏蔽免费节点池（会返回403），额外支持Vless Reality+AnyTLS+TUIC+Mieru订阅转换") : b ? this.$message.success(`${this.backendVersion}` + "本地局域网自建版后端") : this.$message.success(`${this.backendVersion}` + "官方原版后端不支持vless/hysteria订阅转换");
           })
           .catch(() => {
             this.$message.error("请求SubConverter版本号返回数据失败，该后端不可用！");
